@@ -1,0 +1,95 @@
+version: "3.8"
+services:
+
+  sparkmaster:
+    image: hasansyed101/sparkmaster:latest
+    networks:
+      - sparky
+    ports:
+      - 8080:8080
+    volumes:
+      - ../data/corpus-webis-tldr-17.json:/data/corpus.json
+    deploy:
+      resources:
+       #limits:
+       #   cpus: "4"
+       #   memory: 8G
+        reservations:
+          cpus: "4"
+          memory: 2G
+
+  sparkworker:
+    image: hasansyed101/sparkworker:latest
+    depends_on: 
+      - sparkmaster
+    networks:
+      - sparky
+    volumes:
+      - ../data/corpus-webis-tldr-17.json:/data/corpus.json
+    deploy:
+      mode: replicated
+      replicas: 5
+      placement:
+        max_replicas_per_node: 1
+      resources:
+        limits:
+          cpus: "16"
+          memory: 6G
+        reservations:
+          cpus: "8"
+          memory: 3G
+ 
+  mongo_db:
+    image: mongo
+    networks:
+      - sparky
+    volumes:
+      - ${PWD}/../data/mongo:/data/db
+      - ${PWD}:/mongo-seed
+    #environment:
+    #  MONGO_INITDB_ROOT_USERNAME: root
+    #  MONGO_INITDB_ROOT_PASSWORD: example
+
+  mongoclient:
+    image: mongoclient/mongoclient:latest
+    hostname: mongoclient
+    depends_on:
+      - mongo_db
+    networks:
+      - sparky
+    ports:
+      - 3300:3000
+
+#  mongo_seed:
+#   image: mongo
+#   networks:
+#     - sparky
+#   depends_on:
+#     - mongo_db
+#   volumes:
+#    - ${PWD}/../data:/data/db
+#    - ${PWD}:/mongo-seed
+#   command: /mongo-seed/mongo_import.sh
+
+  notebook:
+    image: jupyter/pyspark-notebook:spark-3.3.2
+    networks:
+      - sparky
+    ports:
+      - 8888:8888
+    volumes:
+      - ${PWD}/notebooks:/home/jovyan/work
+      - ../data/corpus-webis-tldr-17.json:/data/corpus.json
+    environment:
+      - NB_UID=1000
+#    deploy:
+#     limits:
+#       cpus: 2
+#       memory: 2G
+#     reservations:
+#       cpus: 1
+#       memory: 1.5G
+
+
+networks:
+  sparky:
