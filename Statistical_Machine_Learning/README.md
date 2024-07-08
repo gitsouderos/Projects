@@ -1,9 +1,9 @@
 # Statistical Machine Learning Project
 
 ## Authors
+- Giorgos Tsouderos
 - Vencel David Koczka
 - Aiman Baig
-- Giorgos Tsouderos
 - Tomas Grahn
 
 ## Date
